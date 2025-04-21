@@ -1,0 +1,133 @@
+#include <iostream>
+#include <fstream>
+#include <climits>
+using namespace std;
+
+class Graph {
+    int adj[20][20];         // Adjacency Matrix
+    int v;                   // Number of vertices
+    string dept[20];         // Department Names
+
+public:
+    Graph(string filename) {
+        ifstream fin(filename);
+        if (!fin) {
+            cout << "Error opening file!" << endl;
+            exit(1);
+        }
+
+        fin >> v;
+        cout << "Number of departments (vertices): " << v << endl;
+
+        cout << "\nReading adjacency matrix from file...\n";
+        for (int i = 0; i < v; i++) {
+            for (int j = 0; j < v; j++) {
+                fin >> adj[i][j];
+            }
+        }
+        fin.close();
+
+        cout << "\nEnter names of departments:\n";
+        for (int i = 0; i < v; i++) {
+            cout << "Department " << i << ": ";
+            cin >> dept[i];
+        }
+    }
+
+    void Display() {
+        cout << "\nAdjacency Matrix (Distances between departments):\n   ";
+        for (int i = 0; i < v; i++)
+            cout << dept[i] << "\t";
+        cout << endl;
+
+        for (int i = 0; i < v; i++) {
+            cout << dept[i] << " ";
+            for (int j = 0; j < v; j++) {
+                cout << adj[i][j] << "\t";
+            }
+            cout << endl;
+        }
+    }
+
+    void prim(int start) {
+        int selected[20] = {0};
+        selected[start] = 1;
+        int edges = 0;
+        int totalCost = 0;
+
+        cout << "\nMinimum Spanning Tree representing College Campus (Prim's Algorithm):\n";
+        while (edges < v - 1) {
+            int min = INT_MAX, x = -1, y = -1;
+            for (int i = 0; i < v; i++) {
+                if (selected[i]) {
+                    for (int j = 0; j < v; j++) {
+                        if (!selected[j] && adj[i][j] && adj[i][j] < min) {
+                            min = adj[i][j];
+                            x = i;
+                            y = j;
+                        }
+                    }
+                }
+            }
+            cout << "Edge: " << dept[x] << " - " << dept[y] << " | Distance: " << min << endl;
+            selected[y] = 1;
+            edges++;
+            totalCost += min;
+        }
+        cout << "Total Distance (Cost) of MST: " << totalCost << endl;
+    }
+
+    void kruskal() {
+        int parent[20];
+        for (int i = 0; i < v; i++)
+            parent[i] = i;
+
+        cout << "\nMinimum Spanning Tree representing College Campus (Kruskal's Algorithm):\n";
+        int edges = 0, totalCost = 0;
+
+        while (edges < v - 1) {
+            int min = INT_MAX, a = -1, b = -1;
+            for (int i = 0; i < v; i++) {
+                for (int j = 0; j < v; j++) {
+                    if (adj[i][j] && adj[i][j] < min && parent[i] != parent[j]) {
+                        min = adj[i][j];
+                        a = i;
+                        b = j;
+                    }
+                }
+            }
+
+            cout << "Edge: " << dept[a] << " - " << dept[b] << " | Distance: " << min << endl;
+            totalCost += min;
+            int old_parent = parent[b];
+            int new_parent = parent[a];
+            for (int i = 0; i < v; i++) {
+                if (parent[i] == old_parent)
+                    parent[i] = new_parent;
+            }
+            edges++;
+        }
+        cout << "Total Distance (Cost) of MST: " << totalCost << endl;
+    }
+};
+
+int main() {
+    Graph G("graph.txt");
+    G.Display();
+
+    cout << "\n--- Using Prim's Algorithm ---\n";
+    G.prim(0); // Start from 0th department
+
+    cout << "\n--- Using Kruskal's Algorithm ---\n";
+    G.kruskal();
+
+    return 0;
+}
+
+
+5
+0 2 0 6 0
+2 0 3 8 5
+0 3 0 0 7
+6 8 0 0 9
+0 5 7 9 0

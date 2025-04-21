@@ -1,0 +1,118 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+class Queue {
+    int *arr, front, rear, size;
+
+public:
+    Queue(int s = 10) {
+        size = s;
+        arr = new int[size];
+        front = rear = -1;
+    }
+
+    bool isEmpty() {
+        return front == -1;
+    }
+
+    bool isFull() {
+        return rear == size - 1;
+    }
+
+    void enQueue(int val) {
+        if (isFull()) return;
+
+        if (isEmpty()) front = 0;
+        arr[++rear] = val;
+    }
+
+    int deQueue() {
+        if (isEmpty()) return -1;
+
+        int val = arr[front];
+        if (front == rear)
+            front = rear = -1;
+        else
+            front++;
+        return val;
+    }
+};
+
+class Graph {
+    int **adjMatrix, vertices;
+
+public:
+    Graph(string filename) {
+        ifstream file(filename);
+        file >> vertices;
+        cout << "no of vertices = " << vertices;
+
+        adjMatrix = new int*[vertices];
+        for (int i = 0; i < vertices; i++) {
+            adjMatrix[i] = new int[vertices];
+            for (int j = 0; j < vertices; j++)
+                file >> adjMatrix[i][j];
+        }
+        file.close();
+    }
+
+    void Display() {
+        cout << "\nAdjacency Matrix:";
+        for (int i = 0; i < vertices; i++) {
+            cout << "\n";
+            for (int j = 0; j < vertices; j++)
+                cout << adjMatrix[i][j] << "\t";
+        }
+        cout << "\n";
+    }
+
+    void BFS(int start) {
+        Queue q(vertices);
+        int *visited = new int[vertices]();
+
+        q.enQueue(start);
+        visited[start] = 1;
+
+        cout << "\nBFS:\t";
+        while (!q.isEmpty()) {
+            int curr = q.deQueue();
+            cout << curr << "\t";
+
+            for (int j = 0; j < vertices; j++) {
+                if (adjMatrix[curr][j] && !visited[j]) {
+                    q.enQueue(j);
+                    visited[j] = 1;
+                }
+            }
+        }
+        delete[] visited;
+    }
+
+    void DFSUtil(int node, int *visited) {
+        visited[node] = 1;
+        cout << node << "\t";
+
+        for (int j = 0; j < vertices; j++) {
+            if (adjMatrix[node][j] && !visited[j]) {
+                DFSUtil(j, visited);
+            }
+        }
+    }
+
+    void DFS(int start) {
+        int *visited = new int[vertices]();
+        cout << "\nDFS:\t";
+        DFSUtil(start, visited);
+        delete[] visited;
+    }
+};
+
+int main() {
+    Graph G("graph.txt");
+    G.Display();
+    G.BFS(0);
+    G.DFS(0);
+
+    return 0;
+}

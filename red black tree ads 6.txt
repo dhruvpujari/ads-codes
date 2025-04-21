@@ -1,0 +1,143 @@
+#include <iostream>
+using namespace std;
+
+enum Color { RED, BLACK };
+
+struct DirectoryNode {
+    string directoryName;
+    DirectoryNode *left, *right, *parent;
+    Color color;
+
+    DirectoryNode(string name) {
+        directoryName = name;
+        left = right = parent = nullptr;
+        color = RED;
+    }
+};
+
+class FileSystem {
+    DirectoryNode* root;
+
+public:
+    FileSystem() {
+        root = nullptr;
+    }
+
+    void insertBST(DirectoryNode* &root, DirectoryNode* &nn) {
+        if (!root) {
+            root = nn;
+        } else if (nn->directoryName < root->directoryName) {
+            insertBST(root->left, nn);
+            root->left->parent = root;
+        } else {
+            insertBST(root->right, nn);
+            root->right->parent = root;
+        }
+    }
+
+    void leftRotate(DirectoryNode* x) {
+        DirectoryNode* y = x->right;
+        x->right = y->left;
+        if (y->left != nullptr) y->left->parent = x;
+        y->parent = x->parent;
+        if (x->parent == nullptr)
+            root = y;
+        else if (x == x->parent->left)
+            x->parent->left = y;
+        else
+            x->parent->right = y;
+        y->left = x;
+        x->parent = y;
+    }
+
+    void rightRotate(DirectoryNode* x) {
+        DirectoryNode* y = x->left;
+        x->left = y->right;
+        if (y->right != nullptr) y->right->parent = x;
+        y->parent = x->parent;
+        if (x->parent == nullptr)
+            root = y;
+        else if (x == x->parent->right)
+            x->parent->right = y;
+        else
+            x->parent->left = y;
+        y->right = x;
+        x->parent = y;
+    }
+
+    void fixInsertion(DirectoryNode* &nn) {
+        DirectoryNode *parent = nullptr, *grandparent = nullptr;
+        while (nn != root && nn->color == RED && nn->parent->color == RED) {
+            parent = nn->parent;
+            grandparent = parent->parent;
+
+            if (parent == grandparent->left) {
+                DirectoryNode* uncle = grandparent->right;
+                if (uncle && uncle->color == RED) {
+                    grandparent->color = RED;
+                    parent->color = uncle->color = BLACK;
+                    nn = grandparent;
+                } else {
+                    if (nn == parent->right) {
+                        leftRotate(parent);
+                        nn = parent;
+                        parent = nn->parent;
+                    }
+                    rightRotate(grandparent);
+                    swap(parent->color, grandparent->color);
+                    nn = parent;
+                }
+            } else {
+                DirectoryNode* uncle = grandparent->left;
+                if (uncle && uncle->color == RED) {
+                    grandparent->color = RED;
+                    parent->color = uncle->color = BLACK;
+                    nn = grandparent;
+                } else {
+                    if (nn == parent->left) {
+                        rightRotate(parent);
+                        nn = parent;
+                        parent = nn->parent;
+                    }
+                    leftRotate(grandparent);
+                    swap(parent->color, grandparent->color);
+                    nn = parent;
+                }
+            }
+        }
+        root->color = BLACK;
+    }
+
+    void insertDirectory(string name) {
+        DirectoryNode* nn = new DirectoryNode(name);
+        insertBST(root, nn);
+        fixInsertion(nn);
+    }
+
+    void inorder(DirectoryNode* root) {
+        if (!root) return;
+        inorder(root->left);
+        cout << (root->color == RED ? "[RED] " : "[BLACK] ");
+        cout << root->directoryName << endl;
+        inorder(root->right);
+    }
+
+    void displayStructure() {
+        cout << "Directory Structure (Inorder Traversal):\n";
+        inorder(root);
+    }
+};
+
+int main() {
+    FileSystem fs;
+    fs.insertDirectory("root");
+    fs.insertDirectory("home");
+    fs.insertDirectory("documents");
+    fs.insertDirectory("downloads");
+    fs.insertDirectory("pictures");
+    fs.insertDirectory("videos");
+    fs.insertDirectory("music");
+
+    fs.displayStructure();
+    return 0;
+}

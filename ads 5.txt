@@ -1,0 +1,84 @@
+#include<iostream>
+#include<climits>
+using namespace std;
+
+class SupplyChain{
+	int A[10][10];  
+	int v;         
+public:
+	SupplyChain(int n){
+		v=n;
+		for(int i=0;i<v;i++){
+			for(int j=0;j<v;j++){
+				A[i][j]=0;
+			}
+		}
+	}
+
+	void addEdge(int src, int dest, int cost){
+		A[src][dest]=cost;
+		A[dest][src]=cost;  
+	}
+
+	void Display(){
+		cout<<"\nSupply Chain Graph (Cost Matrix):\n";
+		for(int i=0;i<v;i++){
+			for(int j=0;j<v;j++){
+				cout<<A[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+	}
+
+	void Dijkstra(int src){
+		int dist[10], visited[10];
+		for(int i=0;i<v;i++){
+			dist[i]=INT_MAX;
+			visited[i]=0;
+		}
+		dist[src]=0;
+
+		for(int i=0;i<v-1;i++){
+			int u=-1, min=INT_MAX;
+			for(int j=0;j<v;j++){
+				if(visited[j]==0 && dist[j]<min){
+					min=dist[j];
+					u=j;
+				}
+			}
+			if(u==-1){
+				i=v;
+			}
+			else{
+				visited[u]=1;
+				for(int j=0;j<v;j++){
+					if(A[u][j] && visited[j]==0 && dist[u]+A[u][j]<dist[j]){
+						dist[j]=dist[u]+A[u][j];
+					}
+				}
+			}
+		}
+
+		cout<<"\nShortest Distance from Source Location "<<src<<":\n";
+		for(int i=0;i<v;i++){
+			cout<<"To Location "<<i<<" = "<<dist[i]<<endl;
+		}
+	}
+};
+
+int main(){
+	SupplyChain S(4);  
+
+	
+	S.addEdge(0,1,4);  
+	S.addEdge(0,2,6);  
+	S.addEdge(1,2,2);  
+	S.addEdge(1,3,5);  
+	S.addEdge(2,3,3);  
+
+	S.Display();
+
+	S.Dijkstra(0); 
+
+	return 0;
+}

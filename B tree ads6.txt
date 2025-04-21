@@ -1,0 +1,220 @@
+#include<iostream>
+#include<algorithm>
+#include<queue>
+using namespace std;
+
+struct node {
+    int key1, key2;
+    node *left, *right, *centre;
+    bool istwokey;
+    
+    node(int key) {
+        key1 = key;
+        key2 = -1;
+        istwokey = false;
+        left = right = centre = NULL;
+    }
+
+    bool leafnode() {
+        return !left && !right && !centre;
+    }
+};
+
+class btree {
+    node* root;
+
+    node* split(node* nn, int key) {
+        int arr[3] = { nn->key1, nn->key2, key };
+        sort(arr, arr + 3);
+
+        node* leftchild = new node(arr[0]);
+        node* rightchild = new node(arr[2]);
+        node* parent = new node(arr[1]);
+
+        parent->left = leftchild;
+        parent->centre = rightchild;
+
+        leftchild->istwokey = false;
+        rightchild->istwokey = false;
+
+        return parent;
+    }
+
+    node* insertleafnode(node* nn, int key) {
+        if (!nn->istwokey) {
+            if (key == nn->key1) return nn;
+
+            if (key < nn->key1) {
+                nn->key2 = nn->key1;
+                nn->key1 = key;
+            } else {
+                nn->key2 = key;
+            }
+            nn->istwokey = true;
+            return nn;
+        } else {
+            return split(nn, key);
+        }
+    }
+
+    node* insert(node* nn, int key) {
+        if (!nn) return new node(key);
+
+        if (nn->leafnode()) {
+            return insertleafnode(nn, key);
+        }
+
+        if (!nn->istwokey) {
+            if (key == nn->key1) return nn;
+
+            if (key < nn->key1)
+                nn->left = insert(nn->left, key);
+            else
+                nn->centre = insert(nn->centre, key);
+        } else {
+            if (key == nn->key1 || key == nn->key2) return nn;
+
+            if (key < nn->key1)
+                nn->left = insert(nn->left, key);
+            else if (key < nn->key2)
+                nn->centre = insert(nn->centre, key);
+            else
+                nn->right = insert(nn->right, key);
+        }
+        return nn;
+    }
+
+    void inorder(node* curr) {
+        if (!curr) return;
+
+        if (!curr->istwokey) {
+            inorder(curr->left);
+            cout << curr->key1 << " ";
+            inorder(curr->centre);
+        } else {
+            inorder(curr->left);
+            cout << curr->key1 << " ";
+            inorder(curr->centre);
+            cout << curr->key2 << " ";
+            inorder(curr->right);
+        }
+    }
+
+    node* deleteKey(node* curr, int key, bool& found) {
+        if (!curr) return NULL;
+
+        if (curr->leafnode()) {
+            // Delete from leaf node
+            if (!curr->istwokey) {
+                if (curr->key1 == key) {
+                    delete curr;
+                    found = true;
+                    return NULL;
+                }
+            } else {
+                if (curr->key1 == key) {
+                    curr->key1 = curr->key2;
+                    curr->istwokey = false;
+                    found = true;
+                    return curr;
+                } else if (curr->key2 == key) {
+                    curr->istwokey = false;
+                    found = true;
+                    return curr;
+                }
+            }
+            return curr;
+        }
+
+        // Recursive deletion for internal nodes (not fully implemented)
+        if (!curr->istwokey) {
+            if (key < curr->key1)
+                curr->left = deleteKey(curr->left, key, found);
+            else
+                curr->centre = deleteKey(curr->centre, key, found);
+        } else {
+            if (key < curr->key1)
+                curr->left = deleteKey(curr->left, key, found);
+            else if (key < curr->key2)
+                curr->centre = deleteKey(curr->centre, key, found);
+            else
+                curr->right = deleteKey(curr->right, key, found);
+        }
+        return curr;
+    }
+
+public:
+    btree() {
+        root = NULL;
+    }
+
+    void insertin(int key) {
+        root = insert(root, key);
+    }
+
+    void displayInorder() {
+        inorder(root);
+        cout << endl;
+    }
+
+    void levelorder() {
+        if (!root) return;
+
+        queue<node*> q;
+        q.push(root);
+
+        while (!q.empty()) {
+            int size = q.size();
+            while (size--) {
+                node* temp = q.front();
+                q.pop();
+
+                if (!temp->istwokey) {
+                    cout << "[" << temp->key1 << "] ";
+                } else {
+                    cout << "[" << temp->key1 << "," << temp->key2 << "] ";
+                }
+
+                if (temp->left) q.push(temp->left);
+                if (temp->centre) q.push(temp->centre);
+                if (temp->right) q.push(temp->right);
+            }
+            cout << endl;
+        }
+    }
+
+    void deletein(int key) {
+        bool found = false;
+        root = deleteKey(root, key, found);
+        if (!found)
+            cout << "Key " << key << " not found in the tree.\n";
+    }
+};
+
+int main() {
+    btree tree;
+    int arr[] = {13, 19, 15, 10, 12, 11, 14, 18};
+    int n = sizeof(arr) / sizeof(arr[0]);
+
+    for (int i = 0; i < n; ++i) {
+        tree.insertin(arr[i]);
+    }
+
+    cout << "Inorder Traversal of B-Tree:\n";
+    tree.displayInorder();
+
+    cout << "Level Order Traversal:\n";
+    tree.levelorder();
+
+    cout << "\nDeleting 15 and 10...\n";
+    tree.deletein(15);
+    tree.deletein(10);
+
+    cout << "\nAfter Deletion - Inorder Traversal:\n";
+    tree.displayInorder();
+
+    cout << "After Deletion - Level Order Traversal:\n";
+    tree.levelorder();
+
+    return 0;
+}
